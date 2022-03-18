@@ -2,6 +2,38 @@ var containerEl = document.querySelector(".container")
 var eventTasks = [];
 var workday = 9;
 var startHour = 9;
+var eventTask = {
+    'hour': "",
+    'task': ""
+};
+
+// Reload events from local storage
+var loadEventTasks = function () {
+    console.log("loadEventTasks");
+    //Gets scores from localStorage.
+    eventTasks = localStorage.getItem("eventTasks");
+  
+    if (eventTasks === null) {
+        eventTasks = [];
+    } else {  
+        //Converts eventTasks from the string format back into an array of objects.
+        eventTasks = JSON.parse(eventTasks);
+    }
+};
+
+var findEvent = function (hour) {
+    console.log(hour);
+    console.log("eventTasks.length ", eventTasks.length);
+    if(eventTasks){
+        for (var i = 0; i < eventTasks.length; i++) {
+            console.log("eventTasks[i].hour: " + eventTasks[i].hour)
+                if (eventTasks[i].hour == hour){
+                    return eventTasks[i].task;
+                }
+            }
+        }
+    return "";
+};
 
 // Display the rows for the hours of the day
 var loadWorkDay = function () {
@@ -25,6 +57,7 @@ var loadWorkDay = function () {
         var descriptionEL = document.createElement("span");
         descriptionEL.classList = "description col-10";
         descriptionEL.setAttribute("data-hour", hourId);
+        descriptionEL.textContent = findEvent(hourId);
         rowEl.appendChild(descriptionEL);
 
         var buttonEl = document.createElement("button");
@@ -42,44 +75,64 @@ var loadWorkDay = function () {
     //auditEventTasks()
 };
 
+var updateLocalStorage = function () {
+    localStorage.setItem("eventTasks", JSON.stringify(eventTasks));
+};
+
 // To Do: time block is color-coded to indicate whether it is in the past, present, or future
 
-// To Do: click into a time block to enter an event
-// click the save button for that time block
-// 
-
-//Finds the clicked task space
+// Detect click on a time block and edit
 $(".time-block").on("click", ".description", function() {
     console.log(this);
     var text = $(this).text().trim();
     var classList = this.className;
     var dataID = this.getAttribute("data-hour");
-    console.log(dataID);
 
     //create text area to swap the span
     var textInput = $("<textarea>")
     .addClass(classList)
     .val(text);
-
+    textInput.attr("data-hour", dataID);
     $(this).replaceWith(textInput);
 
     // Focus on the text area for editing
     textInput.trigger("focus");
 });
 
-// To Do the text for that event is saved in local storage
+// save Edited time block and saved in local storage
 $(".time-block").on("click", ".saveBtn", function() {
     console.log(this);
-    //Need to get find the textarea
+    var dataID = this.getAttribute("data-hour");
+    // TO DO:  Need to get find the textarea
+    // get the parent ul's id attribute
+    var selector = ".description[data-hour=" + dataID + "]";
+       
+    var task =  $(selector).val().trim();
+    console.log(task);
+    
+    eventTask = {
+        'hour': dataID,
+        'task': task
+    }
 
-    //If no text erae end
-    //return;
+    //create span to swap the textarea
+    var spanEl = $("<span>")
+    .addClass("description col-10")
+    .text(task);
+    spanEl.attr("data-hour", dataID);
+    $(selector).replaceWith(spanEl);
+
+    // Add to list
+    eventTasks.push(eventTask);
+    // TO DO: Save to local storage
+    updateLocalStorage();
 });
-
-loadWorkDay ();
 
 // To Do:  need to run at app load then every 15 min?
 var auditEventTasks = function () {
     //To get the current date and time, just call moment() with no parameters.
     var now = moment();
 };
+
+loadEventTasks ();
+loadWorkDay ();
