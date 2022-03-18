@@ -21,12 +21,10 @@ var loadEventTasks = function () {
     }
 };
 
+// Check an event with matching the element hour-id
 var findEvent = function (hour) {
-    console.log(hour);
-    console.log("eventTasks.length ", eventTasks.length);
     if(eventTasks){
         for (var i = 0; i < eventTasks.length; i++) {
-            console.log("eventTasks[i].hour: " + eventTasks[i].hour)
                 if (eventTasks[i].hour == hour){
                     return eventTasks[i].task;
                 }
@@ -35,16 +33,21 @@ var findEvent = function (hour) {
     return "";
 };
 
+// To Do:  need to run at app load then every 15 min?
+var auditEventTasks = function () {
+    //To get the current date and time, just call moment() with no parameters.
+    var now = moment();
+};
+
 // Display the rows for the hours of the day
 var loadWorkDay = function () {
     console.log("loadWorkday");
     var current = moment();
-   // console.log(current);
     
     // Create rows according to startHour and # of hours in workday
     for (var i=startHour; i < (workday + startHour); i++){
         var hour = moment(i, "hh");
-        var hourId = moment(hour).format("X");
+        var hourId = hour.format("X");
         var rowEl = document.createElement("div");
         rowEl.classList = "row";
 
@@ -103,17 +106,27 @@ $(".time-block").on("click", ".description", function() {
 $(".time-block").on("click", ".saveBtn", function() {
     console.log(this);
     var dataID = this.getAttribute("data-hour");
-    // TO DO:  Need to get find the textarea
-    // get the parent ul's id attribute
-    var selector = ".description[data-hour=" + dataID + "]";
-       
-    var task =  $(selector).val().trim();
-    console.log(task);
+    var selector = "textarea.description[data-hour=" + dataID + "]";
     
+    console.log("$(selector):  ", $(selector));
+    if(!$(selector).length) {
+      // No change was made exit function without doing anything
+      return;
+    };
+
+    var task =  $(selector).val().trim()
+              
     eventTask = {
         'hour': dataID,
         'task': task
-    }
+    } 
+
+    //To DO pass this eventTask to a new function
+    // check for exist evnet at selected hour and over write is present
+    // Add to list
+    eventTasks.push(eventTask);
+    // TO DO: Save to local storage
+    updateLocalStorage();
 
     //create span to swap the textarea
     var spanEl = $("<span>")
@@ -121,18 +134,7 @@ $(".time-block").on("click", ".saveBtn", function() {
     .text(task);
     spanEl.attr("data-hour", dataID);
     $(selector).replaceWith(spanEl);
-
-    // Add to list
-    eventTasks.push(eventTask);
-    // TO DO: Save to local storage
-    updateLocalStorage();
 });
 
-// To Do:  need to run at app load then every 15 min?
-var auditEventTasks = function () {
-    //To get the current date and time, just call moment() with no parameters.
-    var now = moment();
-};
-
-loadEventTasks ();
-loadWorkDay ();
+loadEventTasks();
+loadWorkDay();
