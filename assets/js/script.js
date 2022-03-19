@@ -21,6 +21,27 @@ var loadEventTasks = function () {
     }
 };
 
+var updateLocalStorage = function () {
+    localStorage.setItem("eventTasks", JSON.stringify(eventTasks));
+};
+
+//Update eventTasks arrary
+var updateTasks = function (task) {
+    var editedTask = false;
+    for (var i = 0; i < eventTasks.length; i++) {
+        if (eventTasks[i].hour == task.hour){
+            eventTasks[i] = task;
+            editedTask = true;
+            break;
+        }
+    }
+    
+    if(!editedTask){
+        eventTasks.push(eventTask);
+    }
+    //Save to local storage
+    updateLocalStorage();
+}
 // Check an event with matching the element hour-id
 var findEvent = function (hour) {
     if(eventTasks){
@@ -33,10 +54,41 @@ var findEvent = function (hour) {
     return "";
 };
 
+// To Do: time block is color-coded to indicate whether it is in the past, present, or future
+// string classlist
 // To Do:  need to run at app load then every 15 min?
 var auditEventTasks = function () {
     //To get the current date and time, just call moment() with no parameters.
-    var now = moment();
+    //var now = moment();
+    var now = moment.unix(1647612000);
+/*
+    var elementHour = moment.unix(1647612000);
+    var posistion = elementHour.diff(now);
+    if(posistion < 0){
+        console.log("past");
+    } else if (posistion > 0){
+        console.log("future");
+    } else {
+        console.log("present");
+    }
+    //console.log('$(".description"):  ', $(".description"));
+    var elements = $(".description");
+*/
+    $(".description").each(function(i, object) {
+       var elementHour = this.getAttribute("data-hour");
+       console.log('elementHour: ', elementHour);
+       elementHour = moment.unix(elementHour);
+       var posistion = elementHour.diff(now);
+       
+       if(posistion < 0){
+            $(this).removeClass( "future present" ).addClass( "past" );
+        } else if (posistion > 0){
+            $(this).removeClass( "past present" ).addClass( "future" );
+        } else {
+            $(this).removeClass( "past future" ).addClass( "present" );
+        }
+    });
+ 
 };
 
 // Display the rows for the hours of the day
@@ -78,14 +130,9 @@ var loadWorkDay = function () {
     //auditEventTasks()
 };
 
-var updateLocalStorage = function () {
-    localStorage.setItem("eventTasks", JSON.stringify(eventTasks));
-};
-
-// To Do: time block is color-coded to indicate whether it is in the past, present, or future
 
 // Detect click on a time block and edit
-$(".time-block").on("click", ".description", function() {
+$(".time-block").on("click", "span.description", function() {
     console.log(this);
     var text = $(this).text().trim();
     var classList = this.className;
@@ -121,12 +168,7 @@ $(".time-block").on("click", ".saveBtn", function() {
         'task': task
     } 
 
-    //To DO pass this eventTask to a new function
-    // check for exist evnet at selected hour and over write is present
-    // Add to list
-    eventTasks.push(eventTask);
-    // TO DO: Save to local storage
-    updateLocalStorage();
+    updateTasks(eventTask);
 
     //create span to swap the textarea
     var spanEl = $("<span>")
@@ -138,3 +180,4 @@ $(".time-block").on("click", ".saveBtn", function() {
 
 loadEventTasks();
 loadWorkDay();
+auditEventTasks();
